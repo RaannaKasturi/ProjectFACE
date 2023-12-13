@@ -4,7 +4,6 @@ import pickle
 import face_recognition
 import argparse
 import shutil
-from tqdm import tqdm
 
 # Load the reference encodings created in the script album.py
 data = pickle.loads(open('face_encoding.pickle', "rb").read())
@@ -14,12 +13,12 @@ ap = argparse.ArgumentParser()
 
 # Provide a path to the directory containing test images and
 # a path to the directory where you would like to save your output data
-ap.add_argument("-i", "--test_directory", default='TestData',
+ap.add_argument("-i", "--test_directory", required=True,
                 help="path to the test image directory")
-ap.add_argument("-o", "--output_directory", default='OutputData',
+ap.add_argument("-o", "--output_directory", required=True,
                 help="path to the output directory")
-ap.add_argument("-t", "--tolerance", type=float, default=0.4,
-                help="face recognition tolerance (default: 0.4)")
+ap.add_argument("-t", "--tolerance", type=float, default=0.5,
+                help="face recognition tolerance (default: 0.5)")
 args = vars(ap.parse_args())
 
 test_dir = args["test_directory"]
@@ -29,17 +28,16 @@ tolerance = args["tolerance"]
 # Initialize a map linking the faces and the filenames they are found in the output
 filemap = {names: [] for names in data["names"]}
 
-# Get the total number of images in the directory for tqdm
-total_images = len([f for f in os.listdir(test_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.heic'))])
-
 # Loop over all the images in the test directory
-for image_file in tqdm(os.listdir(test_dir), desc="Processing Images", unit="image", total=total_images):
+for count, image_file in enumerate(os.listdir(test_dir)):
     image_path = os.path.join(test_dir, image_file)
 
     # Read only image files & ignore the rest of the files
     if image_file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.heic')):
         filename, file_extension = os.path.splitext(image_file)
+        print(f"Processing image {count + 1} of {len(os.listdir(test_dir))}. Filename: {filename}")
     else:
+        print(f"Skipping non-image file: {image_file}")
         continue
 
     # Load the image
